@@ -1,0 +1,123 @@
+name: Update dtools formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "dtools release tag to use; leave blank for latest"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    name: Update Formula/dtools.rb
+    runs-on: macos-latest
+
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@v4
+
+      - name: Resolve dtools release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${INPUT_TAG}"
+          if [ -z "${tag}" ]; then
+            tag="$(gh release view --repo drusellers/dtools --json tagName --jq .tagName)"
+          elif [[ "${tag}" != v* ]]; then
+            tag="v${tag}"
+          fi
+
+          gh release view "${tag}" --repo drusellers/dtools >/dev/null
+
+          asset="dtools-${tag}.tar.gz"
+          release_dir="${RUNNER_TEMP}/dtools-release"
+          rm -rf "${release_dir}"
+          mkdir -p "${release_dir}"
+
+          gh release download "${tag}" \
+            --repo drusellers/dtools \
+            --pattern "${asset}" \
+            --pattern "${asset}.sha256" \
+            --dir "${release_dir}"
+
+          (cd "${release_dir}" && shasum -a 256 -c "${asset}.sha256")
+
+          sha256="$(awk '{print $1}' "${release_dir}/${asset}.sha256")"
+          version="${tag#v}"
+          url="https://github.com/drusellers/dtools/releases/download/${tag}/${asset}"
+
+          {
+            echo "tag=${tag}"
+            echo "version=${version}"
+            echo "sha256=${sha256}"
+            echo "url=${url}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Update formula
+        env:
+          DTOOLS_URL: ${{ steps.release.outputs.url }}
+          DTOOLS_VERSION: ${{ steps.release.outputs.version }}
+          DTOOLS_SHA256: ${{ steps.release.outputs.sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ruby <<'RUBY'
+          path = "Formula/dtools.rb"
+          text = File.read(path)
+
+          replacements = {
+            /^  url ".*"$/ => %(  url "#{ENV.fetch("DTOOLS_URL")}"),
+            /^  version ".*"$/ => %(  version "#{ENV.fetch("DTOOLS_VERSION")}"),
+            /^  sha256 ".*"$/ => %(  sha256 "#{ENV.fetch("DTOOLS_SHA256")}"),
+          }
+
+          replacements.each do |pattern, replacement|
+            raise "Could not find #{pattern.inspect} in #{path}" unless text.match?(pattern)
+
+            text = text.sub(pattern, replacement)
+          end
+
+          File.write(path, text)
+          RUBY
+
+          git diff -- Formula/dtools.rb
+
+      - name: Validate formula
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ruby -c Formula/dtools.rb
+          brew style Formula/dtools.rb
+          brew tap drusellers/tap "${GITHUB_WORKSPACE}"
+          brew audit --strict --formula drusellers/tap/dtools
+          brew install drusellers/tap/dtools
+          brew test drusellers/tap/dtools
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: update-dtools-${{ steps.release.outputs.version }}
+          delete-branch: true
+          title: Update dtools to ${{ steps.release.outputs.version }}
+          commit-message: Update dtools to ${{ steps.release.outputs.version }}
+          body: |
+            Updates `dtools` to `${{ steps.release.outputs.tag }}`.
+
+            Release: https://github.com/drusellers/dtools/releases/tag/${{ steps.release.outputs.tag }}
+            SHA-256: `${{ steps.release.outputs.sha256 }}`

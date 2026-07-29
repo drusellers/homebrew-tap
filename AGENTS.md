@@ -9,6 +9,7 @@ This repository is a personal Homebrew tap. Formulae live in `Formula/*.rb` and 
 ## Conventions
 
 - Keep formula class names in Homebrew style, e.g. `Formula/dtools.rb` defines `class Dtools < Formula`.
+- Use fully qualified formula names in docs and commands, e.g. `drusellers/tap/dtools`, because Homebrew/core also has a `dtools` formula for the D programming language.
 - Prefer tagged release archives with fixed `sha256` values for stable installs.
 - Include a `head` stanza for personal tools when useful for pre-release testing.
 - Do not invent checksums, versions, or licenses. If an upstream release does not exist yet, keep the formula HEAD-only and document the release follow-up.
@@ -37,7 +38,9 @@ brew uninstall <name>
 
 `dtools` is released from <https://github.com/drusellers/dtools>. The formula installs the `dnet` command and keeps a `head` stanza for pre-release testing.
 
-When a new release is available:
+When a new release is available, prefer running the manual **Update dtools formula** GitHub Actions workflow. It resolves the latest release, verifies the release checksum, updates `Formula/dtools.rb`, validates the formula, and opens a pull request.
+
+For a manual update:
 
 1. Confirm the upstream tag name, executable layout, and license.
 2. Download the release archive and compute its checksum:
