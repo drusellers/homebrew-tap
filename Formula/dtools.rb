@@ -10,7 +10,7 @@ class Dtools < Formula
   depends_on "node"
 
   def install
-    bin.install Dir["bin/*"]
+    bin.install "bin/dnet"
     libexec.install "libexec/dnet", "libexec/dask"
     doc.install "README.md", "AGENTS.md", "LICENSE"
     pkgshare.install "examples"
@@ -20,6 +20,7 @@ class Dtools < Formula
       #!/bin/bash
       exec "#{formula_opt_bin("node")}/node" "#{libexec}/dask/ask.mjs" "$@"
     SH
+    (bin/"dask").chmod 0755
   end
 
   test do
