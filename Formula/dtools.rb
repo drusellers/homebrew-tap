@@ -1,9 +1,9 @@
 class Dtools < Formula
   desc "Collection of command-line tools for managing personal machines"
   homepage "https://github.com/drusellers/dtools"
-  url "https://github.com/drusellers/dtools/releases/download/v2026.10.08.192947-1a713b0/dtools-v2026.10.08.192947-1a713b0.tar.gz"
-  version "2026.10.08.192947-1a713b0"
-  sha256 "11d054a3c64ec6ac1a073fd158d60c2a4a7713f1172ae9b77b6a236242740ab8"
+  url "https://github.com/drusellers/dtools/releases/download/v2026.10.09.004054-32eef05/dtools-v2026.10.09.004054-32eef05.tar.gz"
+  version "2026.10.09.004054-32eef05"
+  sha256 "c33ae87eec5a84be3303e77bbe1069eeb6b2fad176f8a38e16fcd1bb74727513"
   license "Apache-2.0"
   head "https://github.com/drusellers/dtools.git", branch: "main"
 
@@ -11,7 +11,7 @@ class Dtools < Formula
 
   def install
     bin.install "bin/dnet"
-    libexec.install "libexec/dnet", "libexec/dask"
+    libexec.install "libexec/dnet", "libexec/dask", "libexec/dmail"
     doc.install "README.md", "AGENTS.md", "LICENSE"
     pkgshare.install "examples"
 
@@ -21,6 +21,12 @@ class Dtools < Formula
       exec "#{formula_opt_bin("node")}/node" "#{libexec}/dask/ask.mjs" "$@"
     SH
     (bin/"dask").chmod 0755
+
+    (bin/"dmail").write <<~SH
+      #!/bin/bash
+      exec "#{formula_opt_bin("node")}/node" "#{libexec}/dmail/mail.mjs" "$@"
+    SH
+    (bin/"dmail").chmod 0755
   end
 
   test do
@@ -30,6 +36,8 @@ class Dtools < Formula
     assert_path_exists libexec/"dask/index.html"
     assert_path_exists libexec/"dask/app.js"
     assert_path_exists libexec/"dask/style.css"
+    assert_match "dmail login", shell_output("#{bin}/dmail --help")
+    assert_path_exists libexec/"dmail/mail.mjs"
 
     (testpath/"questions.json").write <<~JSON
       {
