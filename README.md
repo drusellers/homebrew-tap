@@ -23,8 +23,9 @@ brew install drusellers/tap/dtools
 Homebrew/core also has a `dtools` formula for the D programming language, so avoid bare `brew install dtools` unless you have verified it resolves to this tap.
 
 The current release installs `dnet` (macOS network helpers), `dask` (a local
-browser question UI for agents), and `dmail` (read-only Microsoft 365 email).
-Homebrew installs Node.js automatically for `dask` and `dmail`; their launchers
+browser question UI for agents), `dmail` (read-only Microsoft 365 email), and
+`djobs` (a `launchctl list` viewer and user interval scheduler).
+Homebrew installs Node.js automatically for `dask`, `dmail`, and `djobs`; their launchers
 use that dependency rather than whichever Node is on PATH.
 The tools are licensed under Apache-2.0.
 
@@ -32,6 +33,7 @@ The tools are licensed under Apache-2.0.
 dnet --help
 dask --help
 dmail --help
+djobs --help
 dask ask "$(brew --prefix drusellers/tap/dtools)/share/dtools/examples/dask/questions.json"
 ```
 
@@ -50,6 +52,21 @@ Your company app registration must enable public client flows and have delegated
 details. Formula tests do not sign in or contact Microsoft.
 Installing the formula does not enable the network guard or change networking.
 
+`djobs` lists loaded launchd jobs (hiding `com.apple.*` and configured
+exclusions) and can install user-level interval schedules:
+
+```sh
+djobs --running
+djobs ignore 'com.microsoft.'
+djobs schedule ./backup.sh 1h --name backup
+djobs unschedule backup
+```
+
+Run it as your normal user, not with sudo. An example config is installed at
+`$(brew --prefix drusellers/tap/dtools)/share/dtools/examples/djobs/config.json`.
+Formula tests only run `djobs --help` and `djobs ignore` against a temporary
+config; they never list, load, or unload launchd jobs.
+
 To install from the latest upstream commit instead of the latest release:
 
 ```sh
@@ -60,7 +77,7 @@ brew install --HEAD drusellers/tap/dtools
 
 | Formula | Commands | Description | Upstream |
 | --- | --- | --- | --- |
-| `dtools` | `dnet`, `dask`, `dmail` | Network helpers, visual agent questions, and Microsoft 365 email | <https://github.com/drusellers/dtools> |
+| `dtools` | `dnet`, `dask`, `dmail`, `djobs` | Network helpers, visual agent questions, Microsoft 365 email, and launchd jobs | <https://github.com/drusellers/dtools> |
 
 ## Maintaining formulae
 
@@ -69,7 +86,7 @@ For `dtools`, run the **Update dtools formula** workflow from the Actions tab to
 To update manually when cutting a new upstream release:
 
 ```sh
-TAG=v2026.10.09.004054-32eef05
+TAG=v2026.10.20.102433-e42dc12
 curl -L -o /tmp/dtools-${TAG}.tar.gz \
   "https://github.com/drusellers/dtools/releases/download/${TAG}/dtools-${TAG}.tar.gz"
 shasum -a 256 /tmp/dtools-${TAG}.tar.gz
@@ -77,8 +94,9 @@ shasum -a 256 /tmp/dtools-${TAG}.tar.gz
 
 Then update `Formula/dtools.rb` with the release `url`, `version`, and `sha256`
 before validating. The formula declares Apache-2.0 and a Node dependency,
-installs all three helper directories, tests `dask` without opening a browser,
-and checks `dmail --help` without accessing a mailbox. When upstream adds a new
+installs all four helper directories, tests `dask` without opening a browser,
+checks `dmail --help` without accessing a mailbox, and tests `djobs` without
+touching launchd. When upstream adds a new
 command, update the install wrappers and tests as well as the release metadata.
 
 Your development checkout may differ from Homebrew's installed tap checkout.

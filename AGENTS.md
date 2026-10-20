@@ -36,7 +36,7 @@ brew uninstall <name>
 
 ## `dtools` release checklist
 
-`dtools` is released from <https://github.com/drusellers/dtools>. The formula installs `dnet`, `dask`, and `dmail` and keeps a `head` stanza for pre-release testing. `dask` and `dmail` use the declared Homebrew Node dependency through installed wrappers. Keep `libexec/dmail` together; tests must not sign in, contact Microsoft, or read real email. Keep `libexec/dask` and its browser assets together; tests must use `--no-open` and a bounded timeout.
+`dtools` is released from <https://github.com/drusellers/dtools>. The formula installs `dnet`, `dask`, `dmail`, and `djobs` and keeps a `head` stanza for pre-release testing. `dask`, `dmail`, and `djobs` use the declared Homebrew Node dependency through installed wrappers. Keep `libexec/dmail` together; tests must not sign in, contact Microsoft, or read real email. Keep `libexec/dask` and its browser assets together; tests must use `--no-open` and a bounded timeout. Keep `libexec/djobs` together; tests must not list, schedule, or unschedule launchd jobs (`djobs ignore ... --config <testpath>` is safe and macOS-only).
 
 When a new release is available, prefer running the manual **Update dtools formula** GitHub Actions workflow. It resolves the latest release, verifies the release checksum, updates `Formula/dtools.rb`, validates the formula, and opens a pull request.
 
@@ -46,7 +46,7 @@ For a manual update:
 2. Download the release archive and compute its checksum:
 
    ```sh
-   TAG=v2026.10.09.004054-32eef05
+   TAG=v2026.10.20.102433-e42dc12
    curl -L -o /tmp/dtools-${TAG}.tar.gz \
      "https://github.com/drusellers/dtools/releases/download/${TAG}/dtools-${TAG}.tar.gz"
    shasum -a 256 /tmp/dtools-${TAG}.tar.gz
@@ -54,5 +54,5 @@ For a manual update:
 
 3. Update the stable `url`, `version`, and `sha256` stanzas in `Formula/dtools.rb`; add `license` only after confirming it upstream.
 4. Update the `install` method if the upstream archive layout changes from `bin/` + `libexec/`.
-5. Keep formula tests safe and non-mutating; `dnet --version`, `dask --help`, `dmail --help`, and `dask ask ... --no-open --timeout 1` are safe. Never open a browser or toggle networking in tests.
+5. Keep formula tests safe and non-mutating; `dnet --version`, `dask --help`, `dmail --help`, `djobs --help`, `djobs ignore PREFIX --config <testpath>`, and `dask ask ... --no-open --timeout 1` are safe. Never open a browser, toggle networking, or call launchctl in tests.
 6. Run the validation commands above.
