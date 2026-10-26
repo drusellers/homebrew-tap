@@ -1,9 +1,9 @@
 class Dtools < Formula
   desc "Collection of command-line tools for managing personal machines"
   homepage "https://github.com/drusellers/dtools"
-  url "https://github.com/drusellers/dtools/releases/download/v2026.10.26.122725-728cb3a/dtools-v2026.10.26.122725-728cb3a.tar.gz"
-  version "2026.10.26.122725-728cb3a"
-  sha256 "d0c3faa07eb926aa2cb6942c2cabd6205314dcfb67ac7355c8330c0a59bbb623"
+  url "https://github.com/drusellers/dtools/releases/download/v2026.10.26.123528-16e26aa/dtools-v2026.10.26.123528-16e26aa.tar.gz"
+  version "2026.10.26.123528-16e26aa"
+  sha256 "405dd978274ff3809b191aec3878c8ee4ea49516b5b7aa31c364243a64da8583"
   license "Apache-2.0"
   head "https://github.com/drusellers/dtools.git", branch: "main"
 
