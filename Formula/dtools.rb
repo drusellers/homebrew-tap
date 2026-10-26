@@ -1,9 +1,9 @@
 class Dtools < Formula
   desc "Collection of command-line tools for managing personal machines"
   homepage "https://github.com/drusellers/dtools"
-  url "https://github.com/drusellers/dtools/releases/download/v2026.10.20.102433-e42dc12/dtools-v2026.10.20.102433-e42dc12.tar.gz"
-  version "2026.10.20.102433-e42dc12"
-  sha256 "356f00b41829c6e883aac4fd9d1cb254638676aa676c055e0bbd3dfa3e97dcd3"
+  url "https://github.com/drusellers/dtools/releases/download/v2026.10.26.122725-728cb3a/dtools-v2026.10.26.122725-728cb3a.tar.gz"
+  version "2026.10.26.122725-728cb3a"
+  sha256 "d0c3faa07eb926aa2cb6942c2cabd6205314dcfb67ac7355c8330c0a59bbb623"
   license "Apache-2.0"
   head "https://github.com/drusellers/dtools.git", branch: "main"
 
@@ -11,7 +11,7 @@ class Dtools < Formula
 
   def install
     bin.install "bin/dnet"
-    libexec.install "libexec/dnet", "libexec/dask", "libexec/dmail", "libexec/djobs"
+    libexec.install "libexec/dnet", "libexec/dask", "libexec/dmail", "libexec/djobs", "libexec/dtodo"
     doc.install "README.md", "AGENTS.md", "LICENSE"
     pkgshare.install "examples"
 
@@ -33,6 +33,12 @@ class Dtools < Formula
       exec "#{formula_opt_bin("node")}/node" "#{libexec}/djobs/jobs.mjs" "$@"
     SH
     (bin/"djobs").chmod 0755
+
+    (bin/"dtodo").write <<~SH
+      #!/bin/bash
+      exec "#{formula_opt_bin("node")}/node" "#{libexec}/dtodo/todo.mjs" "$@"
+    SH
+    (bin/"dtodo").chmod 0755
   end
 
   test do
@@ -46,6 +52,9 @@ class Dtools < Formula
     assert_path_exists libexec/"dmail/mail.mjs"
     assert_match "djobs ignore PREFIX", shell_output("#{bin}/djobs --help")
     assert_path_exists libexec/"djobs/schedules.mjs"
+    assert_match "dtodo list", shell_output("#{bin}/dtodo --help")
+    assert_path_exists libexec/"dtodo/things.js"
+    assert_path_exists libexec/"dtodo/wrike.mjs"
 
     # `ignore` only writes the selected config file; it never calls launchctl.
     if OS.mac?
